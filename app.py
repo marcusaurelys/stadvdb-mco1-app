@@ -6,13 +6,13 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-#for connecting to database
-engine = st.connection('mysql', type='sql')
-
 # configure page 
 st.set_page_config(page_title="Video Game Data", page_icon=":video_game:", layout="wide")
 st.title("🎮 Video Game Data Dashboard")
 st.markdown('<style> div.block-container{padding-top:2rem;}</style>', unsafe_allow_html=True)
+
+#for connecting to database
+engine = st.connection('mysql', type='sql')
 
 #sections sidebar
 st.sidebar.header("Choose data to view:")

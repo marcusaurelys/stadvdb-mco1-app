@@ -22,7 +22,7 @@ st.markdown('<style> div.block-container{padding-top:2rem;}</style>', unsafe_all
 
 #sections sidebar
 st.sidebar.header("Choose data to view:")
-data_view = st.sidebar.selectbox("Select a Data View", ["General Data", "Developer Data", "Genre Data", "Tag Data"])
+data_view = st.sidebar.selectbox("Select a Data View", ["General Data", "Developer Data", "Genre Data", "Tag Data", "Platform Data"])
 
 genre_options_query = pd.read_sql("SELECT * FROM dimm_genre", engine)
 release_date_query = pd.read_sql("SELECT DISTINCT year FROM dimm_date order by year", engine)
@@ -203,3 +203,27 @@ elif data_view == "Tag Data":
         else:
             st.write(f"No data available for the selected tags: {', '.join(selected_tags)}")
 
+elif data_view == "Platform Data":
+    st.header("🖥️ Platform Data")
+    
+    platform_query = """
+    SELECT p.name AS `Platform Name`, d.year AS `Year`, COUNT(gp.game_id) AS `Game Count`
+    FROM dimm_platform p
+    JOIN game_platform gp
+    ON p.platform_id = gp.platform_id
+    JOIN fact_game g
+    ON gp.game_id = g.game_id
+    JOIN dimm_date d
+    ON d.date_id = g.date_id
+    GROUP BY p.name, d.year
+    ORDER BY d.year
+    """
+
+    year_platform_df = pd.read_sql(platform_query, engine)
+
+    if not year_platform_df.empty:
+        fig_platform_line = px.line(year_platform_df, x='Year', y='Game Count', color='Platform Name',
+                                    title="Most popular platform per year")
+        st.plotly_chart(fig_platform_line)
+    else:
+        st.write("No data available")

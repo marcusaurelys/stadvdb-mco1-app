@@ -1,4 +1,4 @@
-mysql
+mysqlclient
 streamlit
 plotly.express
 pandas

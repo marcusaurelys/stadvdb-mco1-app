@@ -1,19 +1,13 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from sqlalchemy import create_engine
 import warnings
 
 
 warnings.filterwarnings('ignore')
 
 #for connecting to database
-user = st.secrets['USER']
-password = st.secrets['PASSWORD']
-host = st.secrets['HOST']
-database = 'mco1_datawarehouse'
-port = st.secrets['PORT']  # Default MySQL port
-engine = create_engine(f'mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}')
+engine = st.connection('mysql', type='mysql')
 
 # configure page 
 st.set_page_config(page_title="Video Game Data", page_icon=":video_game:", layout="wide")

@@ -8,11 +8,11 @@ import warnings
 warnings.filterwarnings('ignore')
 
 #for connecting to database
-user = 'root' #TODO
-password = 'DataWareHouse' #TODO 
-host = '127.0.0.1'  # e.g., 'localhost' or '127.0.0.1'
+user = st.secrets['USER']
+password = st.secrets['PASSWORD']
+host = st.secrets['HOST']
 database = 'mco1_datawarehouse'
-port = '1000'  # Default MySQL port
+port = st.secrets['PORT']  # Default MySQL port
 engine = create_engine(f'mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}')
 
 # configure page 

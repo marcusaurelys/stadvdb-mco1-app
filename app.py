@@ -15,6 +15,8 @@ database = 'mco1_datawarehouse'
 port = st.secrets['PORT']  # Default MySQL port
 engine = create_engine(f'mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}')
 
+
+
 # configure page 
 st.set_page_config(page_title="Video Game Data", page_icon=":video_game:", layout="wide")
 st.title("🎮 Video Game Data Dashboard")
@@ -36,11 +38,11 @@ if data_view == "General Data":
     # graphs
     st.subheader("Total Number of Games Released Over the Years")
     total_games_query = """
-    SELECT YEAR(d.release_date) AS year, COUNT(fg.game_id) AS total_games
+    SELECT d.year, COUNT(fg.game_id) AS total_games
     FROM fact_game fg
     JOIN dimm_date d ON fg.date_id = d.date_id
-    GROUP BY YEAR(d.release_date)
-    ORDER BY YEAR(d.release_date);
+    GROUP BY d.year
+    ORDER BY d.year;
     """
     total_games_df = pd.read_sql(total_games_query, engine)
     fig_total_games = px.line(total_games_df, x='year', y='total_games', title="Total Number of Games Released Over the Years")
@@ -48,11 +50,11 @@ if data_view == "General Data":
 
     st.subheader("Average Game Price Over the Years")
     price_query = """
-    SELECT YEAR(d.release_date) AS year, AVG(fg.price) AS avg_price
+    SELECT d.year, AVG(fg.price) AS avg_price
     FROM fact_game fg
     JOIN dimm_date d ON fg.date_id = d.date_id
-    GROUP BY YEAR(d.release_date)
-    ORDER BY YEAR(d.release_date);
+    GROUP BY d.year
+    ORDER BY d.year;
     """
     price_df = pd.read_sql(price_query, engine)
     fig_price = px.line(price_df, x='year', y='avg_price', title='Average Game Price per Year')
@@ -60,11 +62,11 @@ if data_view == "General Data":
 
     st.subheader("Total Peak CCU Over the Years")
     peak_ccu_query = """
-    SELECT YEAR(d.release_date) AS year, SUM(fg.peak_ccu) AS total_peak_ccu
+    SELECT d.year AS year, SUM(fg.peak_ccu) AS total_peak_ccu
     FROM fact_game fg
     JOIN dimm_date d ON fg.date_id = d.date_id
-    GROUP BY YEAR(d.release_date)
-    ORDER BY YEAR(d.release_date);
+    GROUP BY d.year
+    ORDER BY d.year;
     """
     peak_ccu_df = pd.read_sql(peak_ccu_query, engine)
     fig_peak_ccu = px.line(peak_ccu_df, x='year', y='total_peak_ccu', title='Total Peak CCU Over the Years')
@@ -80,15 +82,15 @@ if data_view == "General Data":
         
         
         specific_year_query = f"""
-        SELECT YEAR(d.release_date) AS year, MONTH(d.release_date) AS month, 
+        SELECT d.year AS year, d.month AS month, 
             COUNT(fg.game_id) AS total_games, 
             AVG(fg.price) AS avg_price, 
             SUM(fg.peak_ccu) AS total_peak_ccu
         FROM fact_game fg
         JOIN dimm_date d ON fg.date_id = d.date_id
-        WHERE YEAR(d.release_date) = {selected_year}
-        GROUP BY YEAR(d.release_date), MONTH(d.release_date)
-        ORDER BY MONTH(d.release_date);
+        WHERE d.year = {selected_year}
+        GROUP BY d.year, d.month
+        ORDER BY d.month;
         """
         year_df = pd.read_sql(specific_year_query, engine)
 
@@ -143,14 +145,14 @@ elif data_view == "Genre Data":
 
         # Total games developed for genre over the years
         genre_games_query = f"""
-        SELECT YEAR(d.release_date) AS release_year, COUNT(fg.game_id) AS total_games
+        SELECT d.year AS release_year, COUNT(fg.game_id) AS total_games
         FROM fact_game fg
         JOIN game_genre gg ON fg.game_id = gg.game_id
         JOIN dimm_genre dg ON gg.genre_id = dg.genre_id
         JOIN dimm_date d ON fg.date_id = d.date_id
         WHERE dg.name = '{selected_genre}'
-        GROUP BY YEAR(d.release_date)
-        ORDER BY YEAR(d.release_date);
+        GROUP BY d.year
+        ORDER BY d.year;
         """
         genre_games_df = pd.read_sql(genre_games_query, engine)
         fig_genre_games = px.line(genre_games_df, x='release_year', y='total_games', title=f"Total Games Developed for {selected_genre} Over the Years")
@@ -158,14 +160,14 @@ elif data_view == "Genre Data":
 
         # Total peak CCU for the genre over the years
         genre_ccu_query = f"""
-        SELECT YEAR(d.release_date) AS release_year, SUM(fg.peak_ccu) AS total_peak_ccu
+        SELECT d.year AS release_year, SUM(fg.peak_ccu) AS total_peak_ccu
         FROM fact_game fg
         JOIN game_genre gg ON fg.game_id = gg.game_id
         JOIN dimm_genre dg ON gg.genre_id = dg.genre_id
         JOIN dimm_date d ON fg.date_id = d.date_id
         WHERE dg.name = '{selected_genre}'
-        GROUP BY YEAR(d.release_date)
-        ORDER BY YEAR(d.release_date);
+        GROUP BY d.year
+        ORDER BY d.year;
         """
         genre_ccu_df = pd.read_sql(genre_ccu_query, engine)
         fig_genre_ccu = px.line(genre_ccu_df, x='release_year', y='total_peak_ccu', title=f"Total Peak CCU for {selected_genre} Over the Years")
@@ -184,13 +186,13 @@ elif data_view == "Tag Data":
         #number of games per year for each selected tag
         tag_filter = "', '".join(selected_tags)
         year_tag_query = f"""
-        SELECT t.name AS tag_name, YEAR(d.release_date) AS release_year, COUNT(gt.game_id) AS game_count
+        SELECT t.name AS tag_name, d.year AS release_year, COUNT(gt.game_id) AS game_count
         FROM game_tag gt
         JOIN dimm_tag t ON gt.tag_id = t.tag_id
         JOIN fact_game fg ON gt.game_id = fg.game_id
         JOIN dimm_date d ON fg.date_id = d.date_id
         WHERE t.name IN ('{tag_filter}')
-        GROUP BY t.name, YEAR(d.release_date)
+        GROUP BY t.name, d.year
         ORDER BY release_year;
         """
         year_tag_df = pd.read_sql(year_tag_query, engine)
